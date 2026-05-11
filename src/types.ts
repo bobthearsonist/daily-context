@@ -1,6 +1,6 @@
 export const DAILY_CONTEXT_API_VERSION = 1 as const;
 export const DAILY_CONTEXT_SCHEMA_VERSION = 1 as const;
-export const DAILY_CONTEXT_PARSER_VERSION = 1 as const;
+export const DAILY_CONTEXT_PARSER_VERSION = 2 as const;
 
 export type DailyContextSchemaVersion = typeof DAILY_CONTEXT_SCHEMA_VERSION;
 export type DailyContextApiVersion = typeof DAILY_CONTEXT_API_VERSION;
@@ -31,6 +31,7 @@ export interface DailyContext {
   date: string;
   dateTag: string;
   contextHash: string;
+  dateTagSource: "date-tags-api" | "convention";
   contexts: DailyContextGroup[];
   sources: DailyContextSource[];
 }

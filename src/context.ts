@@ -1,5 +1,6 @@
 import type { TFile, Vault } from "obsidian";
-import { compactDate, dateTag, normalizeDate } from "./date";
+import { compactDate, normalizeDate } from "./date";
+import { resolveDateTag, type DateTagsApi } from "./date-tags";
 import { hashJson, sha256Hash } from "./hash";
 import { extractDaySection, parseDailyMarkdown } from "./parser";
 import type { DailyContextSettings } from "./settings";
@@ -18,11 +19,12 @@ interface BuildDailyContextOptions {
   settings: DailyContextSettings;
   date: string;
   request?: DailyContextRequestOptions;
+  dateTagsApi?: DateTagsApi | null;
 }
 
 export async function buildDailyContext(options: BuildDailyContextOptions): Promise<DailyContext> {
   const normalizedDate = normalizeDate(options.date);
-  const tag = dateTag(normalizedDate);
+  const tag = resolveDateTag(normalizedDate, options.dateTagsApi);
   const groups = selectedGroups(options.settings, options.request);
   const sources: DailyContextSource[] = [];
 
@@ -34,18 +36,20 @@ export async function buildDailyContext(options: BuildDailyContextOptions): Prom
     }
 
     if (shouldInclude("ai-session", options.settings.includeAiSessions, options.request)) {
-      sources.push(...(await aiSessionSources(options.vault, group, normalizedDate, options.settings, options.request)));
+      sources.push(...(await aiSessionSources(options.vault, group, normalizedDate, tag.aliases, options.settings, options.request)));
     }
   }
 
   if (shouldInclude("date-tagged-file", options.settings.includeDateTaggedFiles, options.request)) {
-    sources.push(...(await dateTaggedFileSources(options.vault, groups, tag, options.settings, options.request)));
+    sources.push(...(await dateTaggedFileSources(options.vault, groups, tag.aliases, options.settings, options.request)));
   }
 
   const uniqueSources = dedupeSources(sources).sort((left, right) => left.id.localeCompare(right.id));
   const contextHash = await hashJson({
     parserVersion: DAILY_CONTEXT_PARSER_VERSION,
     date: normalizedDate,
+    dateTag: tag.primary,
+    dateTagSource: tag.source,
     groups,
     sources: uniqueSources.map(({ id, kind, path, hash }) => ({ id, kind, path, hash })),
   });
@@ -55,7 +59,8 @@ export async function buildDailyContext(options: BuildDailyContextOptions): Prom
     parserVersion: DAILY_CONTEXT_PARSER_VERSION,
     generatedAt: new Date().toISOString(),
     date: normalizedDate,
-    dateTag: tag,
+    dateTag: tag.primary,
+    dateTagSource: tag.source,
     contextHash,
     contexts: groups,
     sources: uniqueSources,
@@ -69,7 +74,10 @@ async function dailySources(
   request: DailyContextRequestOptions | undefined,
 ): Promise<DailyContextSource[]> {
   const markdown = await readLimited(vault, file, settings, request);
-  const parsed = await parseDailyMarkdown(markdown, { sectionHeadings: settings.sectionHeadings });
+  const parsed = await parseDailyMarkdown(markdown, {
+    sectionHeadings: settings.sectionHeadings,
+    stripQueryBlocks: settings.stripQueryBlocks,
+  });
   const sources: DailyContextSource[] = [];
 
   if (shouldInclude("daily-prelude", settings.includePrelude, request) && parsed.prelude.length > 0) {
@@ -104,6 +112,7 @@ async function aiSessionSources(
   vault: Vault,
   group: DailyContextGroup,
   date: string,
+  dateTags: string[],
   settings: DailyContextSettings,
   request: DailyContextRequestOptions | undefined,
 ): Promise<DailyContextSource[]> {
@@ -114,7 +123,7 @@ async function aiSessionSources(
 
   for (const file of files) {
     const markdown = await readLimited(vault, file, settings, request);
-    if (!belongsToDate(file, markdown, date)) {
+    if (!belongsToDate(file, markdown, date, dateTags)) {
       continue;
     }
 
@@ -137,7 +146,7 @@ async function aiSessionSources(
 async function dateTaggedFileSources(
   vault: Vault,
   groups: DailyContextGroup[],
-  tag: string,
+  dateTags: string[],
   settings: DailyContextSettings,
   request: DailyContextRequestOptions | undefined,
 ): Promise<DailyContextSource[]> {
@@ -155,11 +164,14 @@ async function dateTaggedFileSources(
     }
 
     const markdown = await readLimited(vault, file, settings, request);
-    if (!markdownIncludesDateTag(markdown, tag)) {
+    if (!markdownIncludesAnyDateTag(markdown, dateTags)) {
       continue;
     }
 
-    const sections = await parseDailyMarkdown(markdown, { sectionHeadings: settings.sectionHeadings });
+    const sections = await parseDailyMarkdown(markdown, {
+      sectionHeadings: settings.sectionHeadings,
+      stripQueryBlocks: settings.stripQueryBlocks,
+    });
     if (sections.sections.length === 0) {
       continue;
     }
@@ -209,8 +221,12 @@ function markdownFiles(vault: Vault): TFile[] {
   return vault.getMarkdownFiles();
 }
 
-function belongsToDate(file: TFile, markdown: string, date: string): boolean {
-  return markdown.includes(`[[${compactDate(date)}]]`) || markdownIncludesDateTag(markdown, dateTag(date)) || file.path.includes(date);
+function belongsToDate(file: TFile, markdown: string, date: string, dateTags: string[]): boolean {
+  return markdown.includes(`[[${compactDate(date)}]]`) || markdownIncludesAnyDateTag(markdown, dateTags) || file.path.includes(date);
+}
+
+function markdownIncludesAnyDateTag(markdown: string, tags: string[]): boolean {
+  return tags.some((tag) => markdownIncludesDateTag(markdown, tag));
 }
 
 function markdownIncludesDateTag(markdown: string, tag: string): boolean {

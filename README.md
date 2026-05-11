@@ -17,9 +17,13 @@ date-tags -> Daily Context -> Visual Notes
   `blockers`.
 - AI session document discovery for session folders tagged/tied to a date.
 - Date-tagged related file discovery, excluding generated visual artifacts.
+- Optional integration with the `date-tags` plugin API, while still matching
+  the built-in `date/YYYY/MM/DD` convention for existing notes.
 - Stable source hashes and an aggregate context hash for downstream caching.
 
 It returns structured source data, not rendered Dataview or Tasks query output.
+Dataview, DataviewJS, and Tasks fenced query blocks are stripped from configured
+manual sections by default.
 
 ## API sketch
 
@@ -36,6 +40,7 @@ The response includes:
 - `parserVersion`
 - `date`
 - `dateTag`
+- `dateTagSource`
 - `contextHash`
 - `sources[]`
 
