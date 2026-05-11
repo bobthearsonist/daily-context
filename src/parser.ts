@@ -208,7 +208,7 @@ function stripQueryFencedBlocks(lines: string[]): string[] {
     }
   }
 
-  return stripped;
+  return queryFence === null ? stripped : lines;
 }
 
 function isQueryFenceLanguage(language: string): boolean {

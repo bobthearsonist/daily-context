@@ -110,6 +110,24 @@ LIST
   assert.match(sections[0].content, /```dataview/);
 });
 
+test("extractConfiguredSections preserves section content when query fence is unclosed", async () => {
+  const markdown = `# Notes
+
+Manual note.
+
+\`\`\`dataview
+TABLE file.mtime
+
+Critical note after malformed query fence.
+`;
+
+  const sections = await extractConfiguredSections(markdown, ["notes"]);
+  assert.equal(sections.length, 1);
+  assert.match(sections[0].content, /Manual note/);
+  assert.match(sections[0].content, /TABLE file/);
+  assert.match(sections[0].content, /Critical note/);
+});
+
 test("extractDaySection finds session day sections by date wikilink", async () => {
   const markdown = `# Session
 

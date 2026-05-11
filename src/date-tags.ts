@@ -14,6 +14,8 @@ export interface DateTagResolution {
   source: "date-tags-api" | "convention";
 }
 
+export type DateTagSourceMode = DateTagResolution["source"];
+
 export function getDateTagsApi(app: unknown): DateTagsApi | null {
   const appRecord = recordFrom(app);
   const pluginsRecord = recordFrom(appRecord?.plugins);
@@ -32,18 +34,26 @@ export function getDateTagsApi(app: unknown): DateTagsApi | null {
   };
 }
 
-export function resolveDateTag(date: string, api?: DateTagsApi | null): DateTagResolution {
+export function resolveDateTag(date: string, sourceMode: DateTagSourceMode, api?: DateTagsApi | null): DateTagResolution {
   const convention = dateTag(date);
-  if (!api) {
+  if (sourceMode === "convention") {
     return { primary: convention, aliases: [convention], source: "convention" };
   }
 
+  if (!api) {
+    throw new Error("Daily Context is configured to use the Date Tags plugin API, but the API is unavailable.");
+  }
+
   const apiTag = normalizeTag(api.buildDateTag(normalizeDate(date)));
+  if (apiTag.length === 0) {
+    throw new Error("Date Tags plugin API returned an empty date tag.");
+  }
+
   const aliases = Array.from(new Set([apiTag, convention].filter(Boolean)));
   return {
-    primary: apiTag || convention,
-    aliases: aliases.length > 0 ? aliases : [convention],
-    source: apiTag ? "date-tags-api" : "convention",
+    primary: apiTag,
+    aliases,
+    source: "date-tags-api",
   };
 }
 

@@ -1,5 +1,5 @@
 export const DAILY_CONTEXT_API_VERSION = 1 as const;
-export const DAILY_CONTEXT_SCHEMA_VERSION = 1 as const;
+export const DAILY_CONTEXT_SCHEMA_VERSION = 2 as const;
 export const DAILY_CONTEXT_PARSER_VERSION = 2 as const;
 
 export type DailyContextSchemaVersion = typeof DAILY_CONTEXT_SCHEMA_VERSION;

@@ -16,7 +16,7 @@ test("buildDailyContext returns structured sources for a fixture daily note", as
     request: { contextId: "personal" },
   });
 
-  assert.equal(context.schemaVersion, 1);
+  assert.equal(context.schemaVersion, 2);
   assert.equal(context.date, "2026-05-11");
   assert.equal(context.dateTag, "date/2026/05/11");
   assert.equal(context.dateTagSource, "convention");
@@ -38,6 +38,7 @@ function fixtureSettings(): DailyContextSettings {
         sessionFolder: "0 AI Sessions",
       },
     ],
+    dateTagSource: "convention",
     sectionHeadings: ["notes", "decisions", "blockers"],
     includePrelude: true,
     includeAiSessions: true,
@@ -52,7 +53,7 @@ function fixtureSettings(): DailyContextSettings {
 test("buildDailyContext uses date-tags API tag and still matches legacy date tags", async () => {
   const context = await buildDailyContext({
     vault: fixtureVault(FIXTURE_VAULT),
-    settings: fixtureSettings(),
+    settings: { ...fixtureSettings(), dateTagSource: "date-tags-api" },
     date: "2026-05-11",
     request: { contextId: "personal" },
     dateTagsApi: {
@@ -64,6 +65,19 @@ test("buildDailyContext uses date-tags API tag and still matches legacy date tag
   assert.equal(context.dateTag, "custom-date/2026/05/11");
   assert.equal(context.dateTagSource, "date-tags-api");
   assert.ok(context.sources.some((source) => source.kind === "date-tagged-file"));
+});
+
+test("buildDailyContext requires date-tags API when configured", async () => {
+  await assert.rejects(
+    () =>
+      buildDailyContext({
+        vault: fixtureVault(FIXTURE_VAULT),
+        settings: { ...fixtureSettings(), dateTagSource: "date-tags-api" },
+        date: "2026-05-11",
+        request: { contextId: "personal" },
+      }),
+    /Date Tags plugin API/,
+  );
 });
 
 function fixtureVault(root: string): Vault {
