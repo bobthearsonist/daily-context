@@ -1,6 +1,7 @@
 import { Notice, Plugin, TFile } from "obsidian";
 import { buildDailyContext } from "./context";
 import { compactDate, normalizeDate } from "./date";
+import { getDateTagsApi } from "./date-tags";
 import { DEFAULT_SETTINGS, DailyContextSettingTab, type DailyContextSettings } from "./settings";
 import { DAILY_CONTEXT_API_VERSION, type DailyContextApi, type DailyContextRequestOptions } from "./types";
 
@@ -26,6 +27,7 @@ export default class DailyContextPlugin extends Plugin {
       contexts: loaded?.contexts ?? DEFAULT_SETTINGS.contexts,
       sectionHeadings: loaded?.sectionHeadings ?? DEFAULT_SETTINGS.sectionHeadings,
       excludePathFragments: loaded?.excludePathFragments ?? DEFAULT_SETTINGS.excludePathFragments,
+      stripQueryBlocks: loaded?.stripQueryBlocks ?? DEFAULT_SETTINGS.stripQueryBlocks,
     };
   }
 
@@ -40,6 +42,7 @@ export default class DailyContextPlugin extends Plugin {
       settings: this.settings,
       date,
       request: options,
+      dateTagsApi: getDateTagsApi(this.app),
     });
   }
 

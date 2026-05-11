@@ -19,6 +19,7 @@ test("buildDailyContext returns structured sources for a fixture daily note", as
   assert.equal(context.schemaVersion, 1);
   assert.equal(context.date, "2026-05-11");
   assert.equal(context.dateTag, "date/2026/05/11");
+  assert.equal(context.dateTagSource, "convention");
   assert.match(context.contextHash, /^sha256:[a-f0-9]{64}$/);
 
   const sources = new Map(context.sources.map((source) => [source.kind, source]));
@@ -41,11 +42,29 @@ function fixtureSettings(): DailyContextSettings {
     includePrelude: true,
     includeAiSessions: true,
     includeDateTaggedFiles: true,
+    stripQueryBlocks: true,
     maxSourceBytes: 50_000,
     excludePathFragments: [".obsidian/", "-overview.json", "whiteboard.json", "whiteboard.html", "_Conflict."],
     cacheFolder: ".obsidian/plugins/daily-context/cache",
   };
 }
+
+test("buildDailyContext uses date-tags API tag and still matches legacy date tags", async () => {
+  const context = await buildDailyContext({
+    vault: fixtureVault(FIXTURE_VAULT),
+    settings: fixtureSettings(),
+    date: "2026-05-11",
+    request: { contextId: "personal" },
+    dateTagsApi: {
+      version: 1,
+      buildDateTag: () => "custom-date/2026/05/11",
+    },
+  });
+
+  assert.equal(context.dateTag, "custom-date/2026/05/11");
+  assert.equal(context.dateTagSource, "date-tags-api");
+  assert.ok(context.sources.some((source) => source.kind === "date-tagged-file"));
+});
 
 function fixtureVault(root: string): Vault {
   const files = collectMarkdownFiles(root);

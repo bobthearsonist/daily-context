@@ -9,6 +9,7 @@ export interface ParsedDailyMarkdown {
 
 export interface DailyMarkdownParseOptions {
   sectionHeadings: string[];
+  stripQueryBlocks?: boolean;
 }
 
 interface Heading {
@@ -24,7 +25,9 @@ export async function parseDailyMarkdown(
 ): Promise<ParsedDailyMarkdown> {
   return {
     prelude: extractPrelude(markdown),
-    sections: await extractConfiguredSections(markdown, options.sectionHeadings),
+    sections: await extractConfiguredSections(markdown, options.sectionHeadings, {
+      stripQueryBlocks: options.stripQueryBlocks ?? true,
+    }),
   };
 }
 
@@ -46,6 +49,7 @@ export function extractPrelude(markdown: string): string {
 export async function extractConfiguredSections(
   markdown: string,
   headings: string[],
+  options: { stripQueryBlocks?: boolean } = {},
 ): Promise<DailyContextSection[]> {
   const wanted = new Set(headings.map(normalizeHeading));
   if (wanted.size === 0) {
@@ -63,7 +67,12 @@ export async function extractConfiguredSections(
       continue;
     }
 
-    const content = sectionContent(lines, parsedHeadings, heading);
+    const content = sectionContent(lines, parsedHeadings, heading, {
+      stripQueryBlocks: options.stripQueryBlocks ?? true,
+    });
+    if (content.length === 0) {
+      continue;
+    }
     sections.push({
       heading: heading.heading,
       level: heading.level,
@@ -160,11 +169,48 @@ function findHeadings(lines: string[]): Heading[] {
   return headings;
 }
 
-function sectionContent(lines: string[], headings: Heading[], heading: Heading): string {
+function sectionContent(
+  lines: string[],
+  headings: Heading[],
+  heading: Heading,
+  options: { stripQueryBlocks?: boolean } = {},
+): string {
   const nextBoundary = headings.find(
     (candidate) => candidate.lineIndex > heading.lineIndex && candidate.level <= heading.level,
   );
   const start = heading.lineIndex + 1;
   const end = nextBoundary?.lineIndex ?? lines.length;
-  return lines.slice(start, end).join("").trim();
+  const sectionLines = lines.slice(start, end);
+  return (options.stripQueryBlocks ? stripQueryFencedBlocks(sectionLines) : sectionLines).join("").trim();
+}
+
+function stripQueryFencedBlocks(lines: string[]): string[] {
+  const stripped: string[] = [];
+  let queryFence: { marker: string; length: number } | null = null;
+
+  for (const line of lines) {
+    const fence = /^ {0,3}(```+|~~~+)\s*([A-Za-z0-9_-]+)?/.exec(line);
+    if (fence) {
+      const marker = fence[1][0];
+      if (queryFence !== null && queryFence.marker === marker && fence[1].length >= queryFence.length) {
+        queryFence = null;
+        continue;
+      }
+
+      if (!queryFence && isQueryFenceLanguage(fence[2] ?? "")) {
+        queryFence = { marker, length: fence[1].length };
+        continue;
+      }
+    }
+
+    if (!queryFence) {
+      stripped.push(line);
+    }
+  }
+
+  return stripped;
+}
+
+function isQueryFenceLanguage(language: string): boolean {
+  return ["dataview", "dataviewjs", "tasks"].includes(language.trim().toLowerCase());
 }

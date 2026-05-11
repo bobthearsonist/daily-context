@@ -14,6 +14,7 @@ export interface DailyContextSettings {
   includePrelude: boolean;
   includeAiSessions: boolean;
   includeDateTaggedFiles: boolean;
+  stripQueryBlocks: boolean;
   maxSourceBytes: number;
   excludePathFragments: string[];
   cacheFolder: string;
@@ -32,10 +33,11 @@ export const DEFAULT_SETTINGS: DailyContextSettings = {
       sessionFolder: "0 Profisee/AI Sessions",
     },
   ],
-  sectionHeadings: ["notes", "decisions", "blockers"],
+  sectionHeadings: ["notes", "decisions", "blockers", "outcomes", "follow ups", "follow-ups"],
   includePrelude: true,
   includeAiSessions: true,
   includeDateTaggedFiles: true,
+  stripQueryBlocks: true,
   maxSourceBytes: 50_000,
   excludePathFragments: [
     ".obsidian/",
@@ -102,6 +104,16 @@ export class DailyContextSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.includeDateTaggedFiles).onChange(async (value) => {
           this.plugin.settings.includeDateTaggedFiles = value;
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName("Strip query blocks")
+      .setDesc("Remove Dataview, DataviewJS, and Tasks fenced blocks from configured sections before exposing context.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.stripQueryBlocks).onChange(async (value) => {
+          this.plugin.settings.stripQueryBlocks = value;
           await this.plugin.saveSettings();
         }),
       );

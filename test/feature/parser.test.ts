@@ -73,6 +73,43 @@ Real note.
   assert.equal(sections.length, 0);
 });
 
+test("extractConfiguredSections strips Dataview and Tasks query blocks by default", async () => {
+  const markdown = `# Notes
+
+Manual note.
+
+\`\`\`dataview
+TABLE file.mtime
+\`\`\`
+
+\`\`\`tasks
+not done
+\`\`\`
+
+Follow-up note.
+`;
+
+  const sections = await extractConfiguredSections(markdown, ["notes"]);
+  assert.equal(sections.length, 1);
+  assert.match(sections[0].content, /Manual note/);
+  assert.match(sections[0].content, /Follow-up note/);
+  assert.doesNotMatch(sections[0].content, /TABLE file/);
+  assert.doesNotMatch(sections[0].content, /not done/);
+});
+
+test("extractConfiguredSections can preserve query blocks when configured", async () => {
+  const markdown = `# Notes
+
+\`\`\`dataview
+LIST
+\`\`\`
+`;
+
+  const sections = await extractConfiguredSections(markdown, ["notes"], { stripQueryBlocks: false });
+  assert.equal(sections.length, 1);
+  assert.match(sections[0].content, /```dataview/);
+});
+
 test("extractDaySection finds session day sections by date wikilink", async () => {
   const markdown = `# Session
 
