@@ -1,0 +1,11 @@
+{
+  "id": "daily-context",
+  "name": "Daily Context",
+  "version": "0.1.0",
+  "minAppVersion": "1.11.4",
+  "description": "Structured daily context provider for composable Obsidian automations.",
+  "author": "bobthearsonist",
+  "authorUrl": "https://github.com/bobthearsonist",
+  "fundingUrl": "",
+  "isDesktopOnly": false
+}
