@@ -1,5 +1,4 @@
 import type { TFile, Vault } from "obsidian";
-import { normalizePath } from "obsidian";
 import { compactDate, dateTag, normalizeDate } from "./date";
 import { hashJson, sha256Hash } from "./hash";
 import { extractDaySection, parseDailyMarkdown } from "./parser";
@@ -234,4 +233,8 @@ function sourceId(kind: DailyContextSourceKind, path: string, label: string): st
 
 function dedupeSources(sources: DailyContextSource[]): DailyContextSource[] {
   return Array.from(new Map(sources.map((source) => [source.id, source])).values());
+}
+
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, "/").replace(/\/+/g, "/");
 }
