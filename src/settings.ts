@@ -10,6 +10,7 @@ export interface DailyContextGroupSettings {
 
 export interface DailyContextSettings {
   contexts: DailyContextGroupSettings[];
+  dateTagSource: "convention" | "date-tags-api";
   sectionHeadings: string[];
   includePrelude: boolean;
   includeAiSessions: boolean;
@@ -33,6 +34,7 @@ export const DEFAULT_SETTINGS: DailyContextSettings = {
       sessionFolder: "0 Profisee/AI Sessions",
     },
   ],
+  dateTagSource: "convention",
   sectionHeadings: ["notes", "decisions", "blockers", "outcomes", "follow ups", "follow-ups"],
   includePrelude: true,
   includeAiSessions: true,
@@ -61,6 +63,20 @@ export class DailyContextSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: "Daily Context" });
+
+    new Setting(containerEl)
+      .setName("Date tag source")
+      .setDesc("Choose whether Daily Context uses its built-in date/YYYY/MM/DD convention or requires the Date Tags plugin API.")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("convention", "Built-in convention")
+          .addOption("date-tags-api", "Date Tags plugin API")
+          .setValue(this.plugin.settings.dateTagSource)
+          .onChange(async (value) => {
+            this.plugin.settings.dateTagSource = value as DailyContextSettings["dateTagSource"];
+            await this.plugin.saveSettings();
+          }),
+      );
 
     new Setting(containerEl)
       .setName("Section headings")

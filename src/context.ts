@@ -24,7 +24,7 @@ interface BuildDailyContextOptions {
 
 export async function buildDailyContext(options: BuildDailyContextOptions): Promise<DailyContext> {
   const normalizedDate = normalizeDate(options.date);
-  const tag = resolveDateTag(normalizedDate, options.dateTagsApi);
+  const tag = resolveDateTag(normalizedDate, options.settings.dateTagSource, options.dateTagsApi);
   const groups = selectedGroups(options.settings, options.request);
   const sources: DailyContextSource[] = [];
 

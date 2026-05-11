@@ -25,6 +25,7 @@ export default class DailyContextPlugin extends Plugin {
       ...DEFAULT_SETTINGS,
       ...loaded,
       contexts: loaded?.contexts ?? DEFAULT_SETTINGS.contexts,
+      dateTagSource: loaded?.dateTagSource ?? DEFAULT_SETTINGS.dateTagSource,
       sectionHeadings: loaded?.sectionHeadings ?? DEFAULT_SETTINGS.sectionHeadings,
       excludePathFragments: loaded?.excludePathFragments ?? DEFAULT_SETTINGS.excludePathFragments,
       stripQueryBlocks: loaded?.stripQueryBlocks ?? DEFAULT_SETTINGS.stripQueryBlocks,
