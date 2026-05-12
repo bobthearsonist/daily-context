@@ -45,6 +45,20 @@ The response includes:
 - `contextHash`
 - `sources[]`
 
+## Dates vs. date tags
+
+Daily Context keeps these separate:
+
+- `date` is the day being requested, normalized as `YYYY-MM-DD` so API calls,
+  filenames, caches, and comparisons use one stable value.
+- `dateTag` is the Obsidian tag used to find related notes, such as
+  `date/2026/05/11`.
+
+The normalized `date` does not replace the tag format. If **Date tag source** is
+set to **Date Tags plugin API**, Daily Context passes the normalized date to
+Date Tags and uses the tag returned by that plugin. If it is set to
+**Built-in convention**, Daily Context uses `date/YYYY/MM/DD` directly.
+
 ## Development
 
 ```bash

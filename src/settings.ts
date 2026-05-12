@@ -66,7 +66,7 @@ export class DailyContextSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Date tag source")
-      .setDesc("Choose whether Daily Context uses its built-in date/YYYY/MM/DD convention or requires the Date Tags plugin API.")
+      .setDesc("Choose who builds the Obsidian date tag. Daily Context still normalizes requested days as YYYY-MM-DD for matching and cache keys.")
       .addDropdown((dropdown) =>
         dropdown
           .addOption("convention", "Built-in convention")

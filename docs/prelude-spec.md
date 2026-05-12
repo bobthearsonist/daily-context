@@ -38,3 +38,7 @@ Headings inside fenced code blocks are ignored.
 AI session documents may span multiple days. Daily Context extracts the section
 whose heading starts with `YYYY-MM-DD` or contains the daily wikilink
 `[[YYYYMMDD]]`.
+
+`YYYY-MM-DD` is only the normalized day identifier used for section matching and
+API/cache keys. It is separate from the configured Obsidian date tag, such as
+`date/2026/05/11`.
