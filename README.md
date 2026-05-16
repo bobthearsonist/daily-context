@@ -68,6 +68,20 @@ npm run typecheck
 npm run build
 ```
 
+### Local-only integration profile
+
+Default tests use public, generic fixtures. To verify a private vault setup
+without committing paths or note content, copy
+`test/local/local-profile.example.json` to a gitignored
+`test/local/<name>.local.json` and run:
+
+```bash
+DAILY_CONTEXT_LOCAL_PROFILE=test/local/<name>.local.json npm run test:local
+```
+
+Local profiles and `test/local/.output/` are ignored by git. The local test
+asserts source metadata and bounds without printing raw note content.
+
 ## Composition boundary
 
 Daily Context does not extract graphs, call LLMs, or render visuals. Visual Notes
