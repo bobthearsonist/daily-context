@@ -9,6 +9,7 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "typecheck": "tsc -noEmit -skipLibCheck",
     "test:feature": "node test/run-feature-tests.mjs",
+    "test:local": "node test/local/run-local-tests.mjs",
     "lint": "tsc -noEmit -skipLibCheck"
   },
   "keywords": ["obsidian", "plugin", "daily-notes", "context", "dataview"],

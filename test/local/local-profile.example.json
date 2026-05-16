@@ -1,0 +1,44 @@
+{
+  "vaultRoot": "/absolute/path/to/local/vault",
+  "outputContextPath": "test/local/.output/context.local.json",
+  "settings": {
+    "contexts": [
+      {
+        "id": "example",
+        "dailyFolder": "Daily",
+        "sessionFolder": "AI Sessions"
+      }
+    ],
+    "dateTagSource": "convention",
+    "sectionHeadings": ["notes", "decisions", "outcomes"],
+    "includePrelude": true,
+    "includeAiSessions": true,
+    "includeDateTaggedFiles": true,
+    "stripQueryBlocks": true,
+    "maxSourceBytes": 50000,
+    "excludePathFragments": [".obsidian/", "-overview.json", "whiteboard.json", "whiteboard.html", "_Conflict."],
+    "cacheFolder": ".obsidian/plugins/daily-context/cache"
+  },
+  "dateTagsApi": {
+    "baseTag": "date"
+  },
+  "cases": [
+    {
+      "name": "example-current-template",
+      "date": "2026-05-11",
+      "contextId": "example",
+      "dailyPath": "Daily/20260511.md",
+      "expect": {
+        "dateTagSource": "convention",
+        "sourceKinds": {
+          "daily-prelude": { "min": 0, "max": 1 },
+          "daily-section": { "min": 1 },
+          "ai-session": { "min": 0 },
+          "date-tagged-file": { "min": 0 }
+        },
+        "requiredLabels": ["notes"],
+        "forbiddenContentPatterns": ["```dataview", "```dataviewjs", "```tasks"]
+      }
+    }
+  ]
+}

@@ -2,3 +2,5 @@ node_modules/
 main.js
 .test-build/
 data.json
+test/local/**/*.local.json
+test/local/.output/
