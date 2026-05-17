@@ -6,7 +6,7 @@
       {
         "id": "example",
         "dailyFolder": "Daily",
-        "sessionFolder": "AI Sessions"
+        "aiSessionFolders": ["AI Sessions"]
       }
     ],
     "dateTagSource": "convention",

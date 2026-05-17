@@ -3,7 +3,7 @@ import { compactDate, normalizeDate } from "./date";
 import { resolveDateTag, type DateTagsApi } from "./date-tags";
 import { hashJson, sha256Hash } from "./hash";
 import { extractDaySection, parseDailyMarkdown } from "./parser";
-import type { DailyContextSettings } from "./settings";
+import type { DailyContextSettings } from "./settings-model";
 import {
   DAILY_CONTEXT_PARSER_VERSION,
   DAILY_CONTEXT_SCHEMA_VERSION,
@@ -117,7 +117,7 @@ async function aiSessionSources(
   request: DailyContextRequestOptions | undefined,
 ): Promise<DailyContextSource[]> {
   const files = markdownFiles(vault)
-    .filter((file) => isUnderFolder(file.path, group.sessionFolder))
+    .filter((file) => group.aiSessionFolders.some((folder) => isUnderFolder(file.path, folder)))
     .filter((file) => !isExcluded(file.path, settings));
   const sources: DailyContextSource[] = [];
 
@@ -152,7 +152,7 @@ async function dateTaggedFileSources(
 ): Promise<DailyContextSource[]> {
   const sources: DailyContextSource[] = [];
   const dailyFolders = new Set(groups.map((group) => normalizePath(group.dailyFolder)));
-  const sessionFolders = new Set(groups.map((group) => normalizePath(group.sessionFolder)));
+  const sessionFolders = new Set(groups.flatMap((group) => group.aiSessionFolders.map((folder) => normalizePath(folder))));
 
   for (const file of markdownFiles(vault)) {
     if (
@@ -195,7 +195,7 @@ async function dateTaggedFileSources(
 function selectedGroups(settings: DailyContextSettings, request: DailyContextRequestOptions | undefined): DailyContextGroup[] {
   return settings.contexts
     .filter((group) => !request?.contextId || group.id === request.contextId)
-    .map(({ id, dailyFolder, sessionFolder }) => ({ id, dailyFolder, sessionFolder }));
+    .map(({ id, dailyFolder, aiSessionFolders }) => ({ id, dailyFolder, aiSessionFolders }));
 }
 
 function shouldInclude(

@@ -5,13 +5,13 @@ import test from "node:test";
 import type { TFile, Vault } from "obsidian";
 import { buildDailyContext } from "../../src/context";
 import type { DateTagsApi } from "../../src/date-tags";
-import type { DailyContextSettings } from "../../src/settings";
+import { normalizeSettings, type PersistedDailyContextSettings } from "../../src/settings-model";
 import type { DailyContext, DailyContextSourceKind } from "../../src/types";
 
 interface LocalProfile {
   vaultRoot: string;
   outputContextPath?: string;
-  settings: DailyContextSettings;
+  settings: PersistedDailyContextSettings;
   dateTagsApi?: { baseTag?: string };
   cases: LocalCase[];
 }
@@ -21,7 +21,7 @@ interface LocalCase {
   date: string;
   contextId?: string;
   dailyPath?: string;
-  settings?: Partial<DailyContextSettings>;
+  settings?: PersistedDailyContextSettings;
   expect: {
     dateTagSource?: "convention" | "date-tags-api";
     sourceKinds?: Partial<Record<DailyContextSourceKind, { min?: number; max?: number }>>;
@@ -39,13 +39,13 @@ test("local profile cases produce expected Daily Context metadata", async () => 
   const outputContexts: DailyContext[] = [];
 
   for (const localCase of profile.cases) {
-    const settings = {
+    const settings = normalizeSettings({
       ...profile.settings,
       ...localCase.settings,
       contexts: localCase.settings?.contexts ?? profile.settings.contexts,
       sectionHeadings: localCase.settings?.sectionHeadings ?? profile.settings.sectionHeadings,
       excludePathFragments: localCase.settings?.excludePathFragments ?? profile.settings.excludePathFragments,
-    };
+    });
     const first = await buildDailyContext({
       vault,
       settings,
