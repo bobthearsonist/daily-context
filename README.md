@@ -15,7 +15,8 @@ date-tags -> Daily Context -> Visual Notes
   headings/query blocks.
 - Configured manual section extraction, such as `notes`, `decisions`, and
   `blockers`.
-- AI session document discovery for session folders tagged/tied to a date.
+- AI session document discovery across configurable session folders tagged/tied
+  to a date.
 - Date-tagged related file discovery, excluding generated visual artifacts.
 - Configurable date-tag source: either the built-in `date/YYYY/MM/DD`
   convention or the `date-tags` plugin API. When the API source is selected,
@@ -44,6 +45,26 @@ The response includes:
 - `dateTagSource`
 - `contextHash`
 - `sources[]`
+
+Context settings use configurable daily folders and AI session roots:
+
+```ts
+contexts: [
+  {
+    id: "personal",
+    dailyFolder: "0 Daily ADHD Brain Logs",
+    aiSessionFolders: ["0 AI Sessions"],
+  },
+  {
+    id: "work",
+    dailyFolder: "0 Profisee/Captains Log",
+    aiSessionFolders: ["0 Profisee/AI Sessions"],
+  },
+]
+```
+
+Older saved settings with `sessionFolder` are migrated to
+`aiSessionFolders: [sessionFolder]`.
 
 ## Dates vs. date tags
 

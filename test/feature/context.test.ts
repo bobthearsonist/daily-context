@@ -4,7 +4,7 @@ import { join, relative, resolve } from "node:path";
 import test from "node:test";
 import type { TFile, Vault } from "obsidian";
 import { buildDailyContext } from "../../src/context";
-import type { DailyContextSettings } from "../../src/settings";
+import { normalizeSettings, type DailyContextSettings } from "../../src/settings-model";
 
 const FIXTURE_VAULT = resolve("tests/fixtures/vault");
 
@@ -16,7 +16,7 @@ test("buildDailyContext returns structured sources for a fixture daily note", as
     request: { contextId: "personal" },
   });
 
-  assert.equal(context.schemaVersion, 2);
+  assert.equal(context.schemaVersion, 3);
   assert.equal(context.date, "2026-05-11");
   assert.equal(context.dateTag, "date/2026/05/11");
   assert.equal(context.dateTagSource, "convention");
@@ -35,7 +35,7 @@ function fixtureSettings(): DailyContextSettings {
       {
         id: "personal",
         dailyFolder: "0 Daily ADHD Brain Logs",
-        sessionFolder: "0 AI Sessions",
+        aiSessionFolders: ["0 AI Sessions"],
       },
     ],
     dateTagSource: "convention",
@@ -65,6 +65,40 @@ test("buildDailyContext uses date-tags API tag and still matches legacy date tag
   assert.equal(context.dateTag, "custom-date/2026/05/11");
   assert.equal(context.dateTagSource, "date-tags-api");
   assert.ok(context.sources.some((source) => source.kind === "date-tagged-file"));
+});
+
+test("normalizeSettings migrates legacy sessionFolder to aiSessionFolders", () => {
+  const settings = normalizeSettings({
+    contexts: [
+      {
+        id: "personal",
+        dailyFolder: "0 Daily ADHD Brain Logs/",
+        sessionFolder: "0 AI Sessions/",
+      },
+    ],
+  });
+
+  assert.deepEqual(settings.contexts, [
+    {
+      id: "personal",
+      dailyFolder: "0 Daily ADHD Brain Logs",
+      aiSessionFolders: ["0 AI Sessions"],
+    },
+  ]);
+});
+
+test("normalizeSettings preserves explicit empty aiSessionFolders", () => {
+  const settings = normalizeSettings({
+    contexts: [
+      {
+        id: "personal",
+        dailyFolder: "0 Daily ADHD Brain Logs",
+        aiSessionFolders: [],
+      },
+    ],
+  });
+
+  assert.deepEqual(settings.contexts[0].aiSessionFolders, []);
 });
 
 test("buildDailyContext requires date-tags API when configured", async () => {

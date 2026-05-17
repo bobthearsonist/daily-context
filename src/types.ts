@@ -1,5 +1,5 @@
 export const DAILY_CONTEXT_API_VERSION = 1 as const;
-export const DAILY_CONTEXT_SCHEMA_VERSION = 2 as const;
+export const DAILY_CONTEXT_SCHEMA_VERSION = 3 as const;
 export const DAILY_CONTEXT_PARSER_VERSION = 2 as const;
 
 export type DailyContextSchemaVersion = typeof DAILY_CONTEXT_SCHEMA_VERSION;
@@ -39,7 +39,7 @@ export interface DailyContext {
 export interface DailyContextGroup {
   id: string;
   dailyFolder: string;
-  sessionFolder: string;
+  aiSessionFolders: string[];
 }
 
 export interface DailyContextSource {

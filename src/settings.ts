@@ -1,55 +1,9 @@
 import type { App } from "obsidian";
 import { PluginSettingTab, Setting } from "obsidian";
 import type DailyContextPlugin from "./main";
-
-export interface DailyContextGroupSettings {
-  id: string;
-  dailyFolder: string;
-  sessionFolder: string;
-}
-
-export interface DailyContextSettings {
-  contexts: DailyContextGroupSettings[];
-  dateTagSource: "convention" | "date-tags-api";
-  sectionHeadings: string[];
-  includePrelude: boolean;
-  includeAiSessions: boolean;
-  includeDateTaggedFiles: boolean;
-  stripQueryBlocks: boolean;
-  maxSourceBytes: number;
-  excludePathFragments: string[];
-  cacheFolder: string;
-}
-
-export const DEFAULT_SETTINGS: DailyContextSettings = {
-  contexts: [
-    {
-      id: "personal",
-      dailyFolder: "0 Daily ADHD Brain Logs",
-      sessionFolder: "0 AI Sessions",
-    },
-    {
-      id: "work",
-      dailyFolder: "0 Profisee/Captains Log",
-      sessionFolder: "0 Profisee/AI Sessions",
-    },
-  ],
-  dateTagSource: "convention",
-  sectionHeadings: ["notes", "decisions", "blockers", "outcomes", "follow ups", "follow-ups"],
-  includePrelude: true,
-  includeAiSessions: true,
-  includeDateTaggedFiles: true,
-  stripQueryBlocks: true,
-  maxSourceBytes: 50_000,
-  excludePathFragments: [
-    ".obsidian/",
-    "-overview.json",
-    "whiteboard.json",
-    "whiteboard.html",
-    "_Conflict.",
-  ],
-  cacheFolder: ".obsidian/plugins/daily-context/cache",
-};
+import type { DailyContextSettings } from "./settings-model";
+export type { DailyContextGroupSettings, DailyContextSettings, PersistedDailyContextSettings } from "./settings-model";
+export { DEFAULT_SETTINGS, normalizeContexts, normalizeSettings } from "./settings-model";
 
 export class DailyContextSettingTab extends PluginSettingTab {
   constructor(

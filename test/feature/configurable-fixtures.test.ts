@@ -4,16 +4,16 @@ import { join, relative, resolve } from "node:path";
 import test from "node:test";
 import type { TFile, Vault } from "obsidian";
 import { buildDailyContext } from "../../src/context";
-import type { DailyContextSettings } from "../../src/settings";
+import type { DailyContextSettings } from "../../src/settings-model";
 import type { DailyContextSourceKind } from "../../src/types";
 
 const CONFIGURABLE_VAULT = resolve("tests/fixtures/configurable-vault");
 
 const baseSettings: DailyContextSettings = {
   contexts: [
-    { id: "journal", dailyFolder: "Journal", sessionFolder: "Sessions" },
-    { id: "meeting-log", dailyFolder: "Logs", sessionFolder: "Sessions" },
-    { id: "minimal", dailyFolder: "Minimal", sessionFolder: "Sessions" },
+    { id: "journal", dailyFolder: "Journal", aiSessionFolders: ["Sessions"] },
+    { id: "meeting-log", dailyFolder: "Logs", aiSessionFolders: ["Sessions"] },
+    { id: "minimal", dailyFolder: "Minimal", aiSessionFolders: ["Sessions"] },
   ],
   dateTagSource: "convention",
   sectionHeadings: ["notes", "decisions", "outcomes"],
@@ -106,6 +106,41 @@ test("buildDailyContext can require Date Tags API tags while matching legacy ali
   assert.equal(context.dateTagSource, "date-tags-api");
   assert.ok(context.sources.some((source) => source.path === "Related/custom-related.md"));
   assert.ok(context.sources.some((source) => source.path === "Related/journal-related.md"));
+});
+
+test("buildDailyContext scans multiple configured AI session folders", async () => {
+  const context = await buildDailyContext({
+    vault: fixtureVault(CONFIGURABLE_VAULT),
+    settings: {
+      ...baseSettings,
+      contexts: [{ id: "journal", dailyFolder: "Journal", aiSessionFolders: ["Sessions", "Archive Sessions"] }],
+      includeDateTaggedFiles: true,
+    },
+    date: "2026-05-11",
+    request: { contextId: "journal" },
+  });
+
+  assert.equal(countByKind(context.sources, "ai-session"), 2);
+  assert.ok(context.sources.some((source) => source.kind === "ai-session" && source.path === "Archive Sessions/archive-session.md"));
+  assert.equal(
+    context.sources.some((source) => source.kind === "date-tagged-file" && source.path.startsWith("Archive Sessions/")),
+    false,
+  );
+});
+
+test("buildDailyContext honors explicit empty AI session folders", async () => {
+  const context = await buildDailyContext({
+    vault: fixtureVault(CONFIGURABLE_VAULT),
+    settings: {
+      ...baseSettings,
+      contexts: [{ id: "journal", dailyFolder: "Journal", aiSessionFolders: [] }],
+      includeDateTaggedFiles: false,
+    },
+    date: "2026-05-11",
+    request: { contextId: "journal" },
+  });
+
+  assert.equal(countByKind(context.sources, "ai-session"), 0);
 });
 
 function countByKind(sources: { kind: DailyContextSourceKind }[], kind: DailyContextSourceKind): number {

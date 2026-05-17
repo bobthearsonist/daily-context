@@ -2,7 +2,13 @@ import { Notice, Plugin, TFile } from "obsidian";
 import { buildDailyContext } from "./context";
 import { compactDate, normalizeDate } from "./date";
 import { getDateTagsApi } from "./date-tags";
-import { DEFAULT_SETTINGS, DailyContextSettingTab, type DailyContextSettings } from "./settings";
+import {
+  DEFAULT_SETTINGS,
+  DailyContextSettingTab,
+  normalizeSettings,
+  type DailyContextSettings,
+  type PersistedDailyContextSettings,
+} from "./settings";
 import { DAILY_CONTEXT_API_VERSION, type DailyContextApi, type DailyContextRequestOptions } from "./types";
 
 export default class DailyContextPlugin extends Plugin {
@@ -20,20 +26,12 @@ export default class DailyContextPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    const loaded = (await this.loadData()) as Partial<DailyContextSettings> | null;
-    this.settings = {
-      ...DEFAULT_SETTINGS,
-      ...loaded,
-      contexts: loaded?.contexts ?? DEFAULT_SETTINGS.contexts,
-      dateTagSource: loaded?.dateTagSource ?? DEFAULT_SETTINGS.dateTagSource,
-      sectionHeadings: loaded?.sectionHeadings ?? DEFAULT_SETTINGS.sectionHeadings,
-      excludePathFragments: loaded?.excludePathFragments ?? DEFAULT_SETTINGS.excludePathFragments,
-      stripQueryBlocks: loaded?.stripQueryBlocks ?? DEFAULT_SETTINGS.stripQueryBlocks,
-    };
+    const loaded = (await this.loadData()) as PersistedDailyContextSettings | null;
+    this.settings = normalizeSettings(loaded);
   }
 
   async saveSettings(): Promise<void> {
-    this.settings.sectionHeadings = this.settings.sectionHeadings.map((entry) => entry.trim()).filter(Boolean);
+    this.settings = normalizeSettings(this.settings);
     await this.saveData(this.settings);
   }
 
